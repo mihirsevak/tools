@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# Find all the files where our interested word is happening. 
+
+
+usage(){
+	echo "replaceword: 	This utility takes any type of files and replaces a provided string with a replacement string."
+	echo "Usage: 	  	replaceword 'type_of_iles' 'search_string' 'replacement_string'            "
+	echo "example:		replaceword '*.yml' 'interface' 'rate' "
+	echo " "
+	echo " "
+	echo "Another Usage: in case you screwed up the patterns and want to restore your old files back "
+	echo "Usage: 		replaceword restore"
+	exit 1
+}
+
+restore(){
+
+	FILES_TO_RESTORE=$(find . -iname '*.beforereplaceword')
+
+	for i in $FILES_TO_RESTORE
+	do
+		FILE_NAME=$(echo $i | awk -F '\' '{ print $NF }' | awk -F '.beforereplaceword' '{ print $1 }')
+		#find . -iname '*.beforereplaceword' 2>/dev/null | awk -F '/' '{ print $NF }'  | awk -F '.beforereplaceword' '{ print $1 }'
+		echo $FILE_NAME
+		cp $i $FILE_NAME
+	done
+
+}
+
+cleanup(){
+	find . -iname '*.replaceword' | xargs rm 
+	find . -iname '*.beforereplaceword' | xargs rm
+}
+
+if [ $# -ne 3 ]; then
+	if [ "$1" = "restore" ]; then
+		restore
+	elif [ "$1" = "cleanup" ]; then
+		cleanup
+	else
+		usage
+	fi
+fi
+
+set -x
+FILES_TO_EDIT=$(find . -iname "$1" | xargs grep -i "$2" | awk -F ':' '{ print $1 }')
+#echo $FILES_TO_EDIT
+
+for i in $FILES_TO_EDIT 
+do
+	cp $i $i.beforereplaceword
+	sed  -e "s/$2/$3/g"	$i > $i.replaceword
+	cp $i.replaceword $i
+done
+
