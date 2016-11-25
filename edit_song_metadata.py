@@ -30,13 +30,20 @@ def id3_cook(directory, filename, item, track_num):
     audio.save()
 
 
-item = {'song': 'temp.mp3', 'album':'unknown', 'artist':'Lata Mangeshkar', 'lyric':'unknown'}
+item = {'song': 'temp.mp3', 'album':'unknown', 'artist':'Adnnan Sami', 'lyric':'unknown'}
 
-list_of_files=subprocess.Popen(['ls *.mp3'], shell=True, stdout=subprocess.PIPE)
+#list_of_files=subprocess.Popen(['ls *.mp3'], shell=True, stdout=subprocess.PIPE)
+list_of_files=subprocess.Popen(["find . -iname '*.mp3'"], shell=True, stdout=subprocess.PIPE)
 while True:
     filename=list_of_files.stdout.readline()[:-1]
     if filename != '' :
         print filename
+        if filename.lower().find('asha'.lower()) != -1:
+            item['artist'] = 'kishore-asha'
+        elif filename.lower().find('lata'.lower()) != -1:
+            item['artist'] = 'kishore-lata'
+        elif filename.lower().find('duet'.lower()) != -1:
+            item['artist'] = 'kishore-duet'
     else:
         break
 
