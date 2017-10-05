@@ -63,8 +63,11 @@ def find_all_functions(line_numbers=False,handle_multiline_func=True):
     num = 0
     open_paren_difference = 0
     multi_line = False
+    all_functions_info = []
+
     with open(filename) as f:
         for line_of_text in f:
+            num += 1
 
             #Multiline handling
             if handle_multiline_func == True:
@@ -95,7 +98,6 @@ def find_all_functions(line_numbers=False,handle_multiline_func=True):
                         continue
             #Multiline handling ends
                 
-            num += 1
             openParen = re.match(r'.*\(.*', line_of_text, re.M | re.I)
             if openParen:
                 #print 'this can be a function line', line_of_text
@@ -131,9 +133,39 @@ def find_all_functions(line_numbers=False,handle_multiline_func=True):
 
                     func_name = func_name.strip()
                     if func_name != '':
-                        if line_numbers == True:
-                            print num,':' ,
-                        print func_name
+                        #if line_numbers == True:
+                        #    print num,':' ,
+                        #print func_name
+                        all_functions_info.append((num,func_name))
+    return all_functions_info
 
 
-find_all_functions(line_numbers=False,handle_multiline_func=False)
+'''
+To Do:
+    1) Process commandline arguments in a professional way
+    2) Start reading a headerfiles and figure out where does function lie? some library or user written library?
+    3) Provide a way to create a logfile in a specified location and log the whole damn thing. Actually it should be all three options 
+        3.a) instrumentation generated logfile
+        3.b) printf to display on screen
+        3.c) Some system generated log file
+    4) Create different modes to instrument at different level
+        4.a) Normal mode will instrument all the functions in the beginning to find out code path 
+        4.b) Deep Function mode will instrument every single code line to find which line is breaking code
+        4.c) Intense mode will print/check every variable and pointer in this specific code and report if something is out of memory or garbage value
+        4.d) Test Mode will read a text file with input and expected output and find bugs
+        4.e) Others: future expansions
+    5) Apply object oriented design to this tool. Break in multi file, multi module software
+    6) Which design patterns can be applied here? 
+        6.a) Singleton -- only one instance has to run? 
+        6.b) What other design patterns can be applied here?
+    7) How can this be used in multi-threaded setting???
+    *) Look into how we can create a binary out of this so we can distribute it 
+
+'''
+
+
+
+
+all_functions = find_all_functions(line_numbers=False,handle_multiline_func=True)
+for i in all_functions:
+    print i[0],": ", i[1]
