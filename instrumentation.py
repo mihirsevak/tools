@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 import re
-import sys
+import sys, os
+import string
+from shutil import copyfile, move
 
 #filename=$1
-outputfile="test2.c"
-marker="main"
-patternFound = False
+#outputfile="test2.c"
+#marker="main"
 
 
 def help():
@@ -15,18 +16,100 @@ def help():
     print '         or: python instrumentation.py test.c'
     sys.exit(0)
 
-def function_operation():
-    with open(filename)as f, open(outputfile,'w') as f2:
+def chomp(x):
+  if x.endswith("\r\n"): return x[:-2]
+  if x.endswith("\n"): return x[:-1]
+  return x[:] 
+
+def multiline_function_operation(inputfile, outputfile, function_name):
+    print 'came in function multiline_function_operation inputfile = %s outputfile = %s function_name = %s' %(inputfile, outputfile, function_name)
+    patternFound = False
+    function_name_found = False
+    with open(inputfile)as f, open(outputfile,'a+') as f2:
         for line_of_text in f:
-            matchObj = re.match(r'.*main.*',line_of_text,re.M|re.I)
+            matchObj = re.match(r'.*%s.*'% function_name, line_of_text,re.M|re.I)
+
+            if patternFound == True:
+                print 'came in pattern found block to write debug lines'
+                braceFound = re.match(r'.*{.*',line_of_text,re.M|re.I)
+                semiColonFound = re.match(r'.*;.*',line_of_text,re.M|re.I)
+                closeParanFound = re.match(r'.*\).*',line_of_text,re.M|re.I)
+                if braceFound:
+                    print 'came in brace found block to write debug lines'
+                    f2.write(line_of_text)
+                    f2.write("%s \n" % ("printf(\"MIHIR-DEBUG:: came in function %s at line %d in file %s\\n\", __func__, __LINE__, __FILE__ );"))
+                    f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log);"))
+                elif closeParanFound or semiColonFound :
+                    patternFound = False
+                    fuction_name_found = False
+
+                else :
+                    #f2.write("%s \n" % ("printf(\"MIHIR-DEBUG:: came in function %s at line %d in file %s\\n\", __func__, __LINE__, __FILE__ );"))
+                    ##f2.write("%s %s %s\n" % ("printf(\"MIHIR-DEBUG:: came in function ", repr(marker), ");"));
+                    #f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log)"))
+                    pass
+                   
+                f2.write(line_of_text)
+                continue
+
+            # Handling multiline function 
+            if function_name_found == True :
+                print '############came in function_name_found block'
+                print '#### ACTUAL LINE =', line_of_text
+                #search for openning ( and turn on patternFound flag
+                words_in_line = line_of_text.translate(None,string.whitespace)
+                print 'words in line =', words_in_line
+                first_word = words_in_line[0]
+                print 'first word =', first_word
+                if first_word == '(':
+                    print 'turning on open paran found and patternFound flag'
+                    patternFound = True
+
+            ## DEFAULT WRITING
+            f2.write(line_of_text)
+            if function_name_found == True:
+                print 'we found the function name but next line was not open ( so disable flag'
+                function_name_found = False
+
+            # Handling function name part
+            if matchObj:
+                words_in_line = line_of_text.split(' ')
+                last_word=chomp(words_in_line[-1])
+                word = last_word.translate(None, string.whitespace) 
+                #print last_word, last_word.strip(), last_word.rstrip(),'END'
+                if word == function_name :
+                    print line_of_text
+                    print '***************multi_line_function process accordingly'
+                    print '***************next line\'s first character must be ('
+                    print '***************if ( is found just look for { and add your line after it'
+                    function_name_found = True
+                    continue
+                else:
+                    print 'function name = ', function_name, 'and last_word =', last_word.rstrip(),'END'
+                    continue
+                    patternFound = True
+                    print (line_of_text)
+
+            #else:
+            #    print 'no match'
+
+def function_operation(inputfile, outputfile, function_name):
+    print 'came in function function_operation inputfile = %s outputfile = %s function_name = %s' %(inputfile, outputfile, function_name)
+    patternFound = False
+    with open(inputfile)as f, open(outputfile,'a+') as f2:
+        for line_of_text in f:
+            matchObj = re.match(r'.*%s.*'% function_name, line_of_text,re.M|re.I)
 
             if patternFound == True:
                 braceFound = re.match(r'.*{.*',line_of_text,re.M|re.I)
                 if braceFound:
                     f2.write(line_of_text)
-                    f2.write("%s %s %s\n" % ("printf(\"MIHIR-DEBUG:: came in function ", repr(marker), ");"));
+                    f2.write("%s \n" % ("printf(\"MIHIR-DEBUG:: came in function %s at line %d in file %s\\n\", __func__, __LINE__, __FILE__ );"))
+                    f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log)"))
                 else:
-                    f2.write("%s %s %s\n" % ("printf(\"MIHIR-DEBUG:: came in function ", repr(marker), ");"));
+                    f2.write("%s \n" % ("printf(\"MIHIR-DEBUG:: came in function %s at line %d in file %s\\n\", __func__, __LINE__, __FILE__ );"))
+                    #f2.write("%s %s %s\n" % ("printf(\"MIHIR-DEBUG:: came in function ", repr(marker), ");"));
+                    f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log)"))
                 patternFound = False
                 continue
 
@@ -38,7 +121,7 @@ def function_operation():
             #else:
             #    print 'no match'
             
-def find_all_functions(line_numbers=False,handle_multiline_func=True):
+def find_all_functions(filename="NO_FILE_PROVIDED",line_numbers=False,handle_multiline_func=True):
     '''
         1) look for ( and ) 
            1.a) bot ( and ) may not be in a same line
@@ -55,10 +138,18 @@ def find_all_functions(line_numbers=False,handle_multiline_func=True):
         look for ) followed by { 
         make sure ) is not followed by ;
     ''' 
+
+    ''' 
+    #To run this function in a stand alone mode
     if ( len(sys.argv) <= 1 ):
         help()
     else:
         filename = sys.argv[1]
+    '''
+
+    if filename == "NO_FILE_PROVIDEDE" :
+        print "ERROR:: You idiot you haven't provided file to process"
+        sys.exit(-1)
 
     num = 0
     open_paren_difference = 0
@@ -143,7 +234,7 @@ def find_all_functions(line_numbers=False,handle_multiline_func=True):
 '''
 To Do:
     1) Process commandline arguments in a professional way
-    2) Start reading a headerfiles and figure out where does function lie? some library or user written library?
+    2) Start reading a headerfiles and figure out where does function resides? some library or user written library?
     3) Provide a way to create a logfile in a specified location and log the whole damn thing. Actually it should be all three options 
         3.a) instrumentation generated logfile
         3.b) printf to display on screen
@@ -159,13 +250,44 @@ To Do:
         6.a) Singleton -- only one instance has to run? 
         6.b) What other design patterns can be applied here?
     7) How can this be used in multi-threaded setting???
+    8) Handle commented out functions. (Ignore all comments lines)
     *) Look into how we can create a binary out of this so we can distribute it 
 
 '''
 
 
 
+#USE CASE 1 #if a function to be instrumented is passed in as an argument.
+operating_file = str(sys.argv[2])
+inputfile = str(sys.argv[2])
+backup_file = str(sys.argv[2]) + ".orig"
+function_to_instrument = str(sys.argv[1])
+outputfile='temp.c' #FIXME -- output filename has to be dynamically created
 
-all_functions = find_all_functions(line_numbers=False,handle_multiline_func=True)
+#FIXME -- this has to be done more intelligently 
+if not os.path.exists(backup_file) :
+    copyfile(operating_file, backup_file)
+
+multiline_function_operation(inputfile, outputfile, function_name=function_to_instrument) 
+move(outputfile, inputfile)
+
+
+
+'''
+#USE CASE 2 #IF all functions has to be instrumented
+operating_file = str(sys.argv[1])
+inputfile = str(sys.argv[1])
+backup_file = str(sys.argv[1]) + ".orig"
+outputfile='temp.c' #FIXME -- output filename has to be dynamically created
+
+all_functions = find_all_functions(filename=str(sys.argv[1]),line_numbers=False,handle_multiline_func=True)
+
+#FIXME -- this has to be done more intelligently 
+if not os.path.exists(backup_file) :
+    copyfile(operating_file, backup_file)
+
 for i in all_functions:
-    print i[0],": ", i[1]
+    print i[0],": ", i[1] #i[0] is a line number and i[1] is a function name
+    function_operation(inputfile, outputfile,function_name=i[1]) 
+    move(outputfile, inputfile)
+'''
