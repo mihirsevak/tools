@@ -17,29 +17,53 @@ def help():
     sys.exit(0)
 
 def chomp(x):
-  if x.endswith("\r\n"): return x[:-2]
-  if x.endswith("\n"): return x[:-1]
-  return x[:] 
+    if x.endswith("\r\n"): return x[:-2]
+    if x.endswith("\n"): return x[:-1]
+    return x[:] 
+
+def is_single_line_prototype(line_of_text, function_name):
+    print 'came in single_line_prototype'
+    oneLineFuncPrototype = re.match(r'.*%s(\s?)+\(.*\)(\s?)+'% function_name, line_of_text,re.M|re.I)
+    if oneLineFuncPrototype:
+        print 'it is a single line prototype'
+        return True
+
+def is_opening_brace_with_prototype(line_of_text, function_name):
+    print 'came in single_line_prototype'
+    oneLineFuncPrototype = re.match(r'.*%s(\s?)+\(.*\)(\s?)+\{(\s?)+'% function_name, line_of_text,re.M|re.I)
+    if oneLineFuncPrototype:
+        print 'it is a brace with function prototype'
+        return True
 
 def multiline_function_operation(inputfile, outputfile, function_name):
-    print 'came in function multiline_function_operation inputfile = %s outputfile = %s function_name = %s' %(inputfile, outputfile, function_name)
+    #print 'came in function multiline_function_operation inputfile = %s outputfile = %s function_name = %s' %(inputfile, outputfile, function_name)
     patternFound = False
     function_name_found = False
     with open(inputfile)as f, open(outputfile,'a+') as f2:
         for line_of_text in f:
             matchObj = re.match(r'.*%s.*'% function_name, line_of_text,re.M|re.I)
+            if matchObj:
+                #Handle brace in same line too
+                if is_opening_brace_with_prototype(line_of_text, function_name) == True:
+                    f2.write(line_of_text)
+                    f2.write("%s \n" % ("printf(\"MIHIR-DEBUG:: came in function %s at line %d in file %s\\n\", __func__, __LINE__, __FILE__ );"))
+                    f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log);"))
+                    continue
+                if is_single_line_prototype(line_of_text, function_name) == True:
+                    patternFound = True
 
             if patternFound == True:
                 print 'came in pattern found block to write debug lines'
                 braceFound = re.match(r'.*{.*',line_of_text,re.M|re.I)
                 semiColonFound = re.match(r'.*;.*',line_of_text,re.M|re.I)
                 closeParanFound = re.match(r'.*\).*',line_of_text,re.M|re.I)
+                f2.write(line_of_text)
                 if braceFound:
                     print 'came in brace found block to write debug lines'
-                    f2.write(line_of_text)
+                    #f2.write(line_of_text)
                     f2.write("%s \n" % ("printf(\"MIHIR-DEBUG:: came in function %s at line %d in file %s\\n\", __func__, __LINE__, __FILE__ );"))
                     f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log);"))
-                elif closeParanFound or semiColonFound :
+                elif semiColonFound :
                     patternFound = False
                     fuction_name_found = False
 
@@ -49,7 +73,6 @@ def multiline_function_operation(inputfile, outputfile, function_name):
                     #f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log)"))
                     pass
                    
-                f2.write(line_of_text)
                 continue
 
             # Handling multiline function 
@@ -73,10 +96,11 @@ def multiline_function_operation(inputfile, outputfile, function_name):
 
             # Handling function name part
             if matchObj:
-                words_in_line = line_of_text.split(' ')
+                words_in_line = chomp(line_of_text).strip().split(' ')
+                print 'words_in_line =', words_in_line
                 last_word=chomp(words_in_line[-1])
                 word = last_word.translate(None, string.whitespace) 
-                #print last_word, last_word.strip(), last_word.rstrip(),'END'
+                print last_word, last_word.strip(), last_word.rstrip(),'END'
                 if word == function_name :
                     print line_of_text
                     print '***************multi_line_function process accordingly'
