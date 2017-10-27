@@ -4,6 +4,8 @@ import re
 import sys, os
 import string
 from shutil import copyfile, move
+from utilities.py import chomp, is_single_line_prototype, is_opening_brace_with_prototype
+                         find_end_of_function
 
 #filename=$1
 #outputfile="test2.c"
@@ -15,25 +17,6 @@ def help():
     print 'For example: ./instrumentaiton.py test.c'
     print '         or: python instrumentation.py test.c'
     sys.exit(0)
-
-def chomp(x):
-    if x.endswith("\r\n"): return x[:-2]
-    if x.endswith("\n"): return x[:-1]
-    return x[:] 
-
-def is_single_line_prototype(line_of_text, function_name):
-    print 'came in single_line_prototype'
-    oneLineFuncPrototype = re.match(r'.*%s(\s?)+\(.*\)(\s?)+'% function_name, line_of_text,re.M|re.I)
-    if oneLineFuncPrototype:
-        print 'it is a single line prototype'
-        return True
-
-def is_opening_brace_with_prototype(line_of_text, function_name):
-    print 'came in single_line_prototype'
-    oneLineFuncPrototype = re.match(r'.*%s(\s?)+\(.*\)(\s?)+\{(\s?)+'% function_name, line_of_text,re.M|re.I)
-    if oneLineFuncPrototype:
-        print 'it is a brace with function prototype'
-        return True
 
 def multiline_function_operation(inputfile, outputfile, function_name):
     #print 'came in function multiline_function_operation inputfile = %s outputfile = %s function_name = %s' %(inputfile, outputfile, function_name)
