@@ -4,8 +4,8 @@ import re
 import sys, os
 import string
 from shutil import copyfile, move
-from utilities.py import chomp, is_single_line_prototype, is_opening_brace_with_prototype
-                         find_end_of_function
+from utilities import chomp, is_single_line_prototype, is_opening_brace_with_prototype, find_end_of_function
+from deleteline import cleanup
 
 #filename=$1
 #outputfile="test2.c"
@@ -17,6 +17,29 @@ def help():
     print 'For example: ./instrumentaiton.py test.c'
     print '         or: python instrumentation.py test.c'
     sys.exit(0)
+
+
+
+'''
+def readfile():
+    multiLineCommentSection = False
+
+    if multiLineCommentSection == True:
+        if foundEnd(line) == True:
+            multiLineCommentSection = False
+            #anything significant to do after */ ??? shoud we write a function for that?
+        else:
+            continue
+
+    #This handles // and /*xxxxlfjfa;ljf*/ in same line
+    if is_comment(line) == Ture: 
+        continue
+
+    # This handles /* without end */
+    if is_beginning_of_multiline_comments(line):
+        multiLineCommentSection = True
+
+'''
 
 def multiline_function_operation(inputfile, outputfile, function_name):
     #print 'came in function multiline_function_operation inputfile = %s outputfile = %s function_name = %s' %(inputfile, outputfile, function_name)
@@ -112,11 +135,11 @@ def function_operation(inputfile, outputfile, function_name):
                 if braceFound:
                     f2.write(line_of_text)
                     f2.write("%s \n" % ("printf(\"MIHIR-DEBUG:: came in function %s at line %d in file %s\\n\", __func__, __LINE__, __FILE__ );"))
-                    f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log)"))
+                    f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log);"))
                 else:
                     f2.write("%s \n" % ("printf(\"MIHIR-DEBUG:: came in function %s at line %d in file %s\\n\", __func__, __LINE__, __FILE__ );"))
                     #f2.write("%s %s %s\n" % ("printf(\"MIHIR-DEBUG:: came in function ", repr(marker), ");"));
-                    f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log)"))
+                    f2.write("%s %s %s\n" % ("system(\"echo \'came in function ", function_name, " \' >> /tmp/mihir.log);"))
                 patternFound = False
                 continue
 
@@ -264,7 +287,9 @@ To Do:
 
 
 
+'''
 #USE CASE 1 #if a function to be instrumented is passed in as an argument.
+print 'BEGINNING OF WORK'
 operating_file = str(sys.argv[2])
 inputfile = str(sys.argv[2])
 backup_file = str(sys.argv[2]) + ".orig"
@@ -277,10 +302,10 @@ if not os.path.exists(backup_file) :
 
 multiline_function_operation(inputfile, outputfile, function_name=function_to_instrument) 
 move(outputfile, inputfile)
-
-
-
 '''
+
+
+
 #USE CASE 2 #IF all functions has to be instrumented
 operating_file = str(sys.argv[1])
 inputfile = str(sys.argv[1])
@@ -296,5 +321,5 @@ if not os.path.exists(backup_file) :
 for i in all_functions:
     print i[0],": ", i[1] #i[0] is a line number and i[1] is a function name
     function_operation(inputfile, outputfile,function_name=i[1]) 
+    #multiline_function_operation(inputfile, outputfile,function_name=i[1]) 
     move(outputfile, inputfile)
-'''

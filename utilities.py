@@ -41,6 +41,7 @@ def find_end_of_function (inputfile, startLine=0):
                 print 'end of function at line number %d' % lineNumber
                 return
 
-inputfile = str(sys.argv[1])
-startLine = int(sys.argv[2])
-find_end_of_function(inputfile, startLine)
+if __name__ == "__main__":
+    inputfile = str(sys.argv[1])
+    startLine = int(sys.argv[2])
+    find_end_of_function(inputfile, startLine)
