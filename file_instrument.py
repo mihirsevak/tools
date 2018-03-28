@@ -5,25 +5,9 @@ import time
 import datetime
 import os.path
 import glob
+import subprocess
 
-def create_outputfile (inputFile="somefile"):
-	backup = str(inputFile) + '.orig'
-	#we have to handle this later
-	if os.path.exists(backup):
-		pass
-	else:
-		filename,extension = name.split('.')
-		searchname=filename + '_*.' + extension
-		glob.glob(searchname)
-		pass
 
-	copyfile(inputFile, backup)
-	n = datetime.datetime.now()                                                                                                                                                                                                                                                                                       
-	unix_time = int( time.mktime(n.timetuple()) )
-	filename, extension = inputFile.split('.')
-	#outputFile = filename +'_' + str(unix_time) + '.' + extension
-	#print outputFile
-	return filename +'_' + str(unix_time) + '.' + extension
 
 def deep_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	
@@ -69,18 +53,28 @@ def deep_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 		return
 
 
+def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
+	#get all the function names and line numbers for a given file
+	#ctags -x --c-kinds=f readtags.c
+	cmd = "ctags -x --c-kinds=f " + fileName + " | awk '{ print $1 }'"
+	functionNameList = subprocess.check_output(cmd, shell=True)
+	for functionName in functionNameList:
+		shallow_function_instrument(fileName,functionName):
+	return
+
 
 if __name__ == '__main__':
-	if len(sys.argv) == 4:
-		print ("filename = {}, startLine = {}, endLine = {}".format(sys.argv[1], sys.argv[2], sys.argv[3]) )
-		deep_file_instrument(str(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]) )
-	elif len(sys.argv) == 3:
-		print ("filename = {}, startLine = {}".format(sys.argv[1], sys.argv[2]) )
-		deep_file_instrument(str(sys.argv[1]), int(sys.argv[2]) )
-	elif len(sys.argv) == 2:
-		print ("filename = {}".format(sys.argv[1]) )
-		deep_file_instrument(str(sys.argv[1]) )
-		
+	# if len(sys.argv) == 4:
+	# 	print ("filename = {}, startLine = {}, endLine = {}".format(sys.argv[1], sys.argv[2], sys.argv[3]) )
+	# 	deep_file_instrument(str(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]) )
+	# elif len(sys.argv) == 3:
+	# 	print ("filename = {}, startLine = {}".format(sys.argv[1], sys.argv[2]) )
+	# 	deep_file_instrument(str(sys.argv[1]), int(sys.argv[2]) )
+	# elif len(sys.argv) == 2:
+	# 	print ("filename = {}".format(sys.argv[1]) )
+	# 	deep_file_instrument(str(sys.argv[1]) )
+	shallow_file_instrument("/home/parallels/Downloads/ctags-5.8/readtags.c")	
+
 
 
 
