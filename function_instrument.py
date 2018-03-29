@@ -7,6 +7,7 @@ import time
 import os.path
 #from fresh_main import shallow_instrumented, deep_instrumented
 from file_operations import create_outputfile, chomp
+from collections import OrderedDict
 
 
 
@@ -29,7 +30,7 @@ def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_funct
 	#	return
 	#else:
 	#	shallow_instrumented[functionName] 
-	print functionName
+	#print functionName
 
 	startLine, endLine = find_function_body(inputFile,functionName)
 	enter_instrument = int(startLine) + 2
@@ -125,10 +126,51 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	#ctags -x --c-kinds=f readtags.c
 	cmd = "ctags -x --c-kinds=f " + fileName + " | awk '{ print $1 }'"
 	functionNameList = subprocess.check_output(cmd, shell=True).split('\n')
+	cmd = "ctags -x --c-kinds=f " + fileName + " | awk '{ print $3 }'"
+	lineNumberList = subprocess.check_output(cmd, shell=True).split('\n')
 	#print functionNameList
-	for functionName in functionNameList:
-		#print functionName
-		shallow_function_instrument(fileName,functionName)
+
+	#This is for output file
+	resultFile = create_outputfile(fileName)
+	print resultFile
+
+	lineNumber = 0	
+
+	sorted_function_list = sorted(zip(lineNumberList, functionNameList))
+	element = 0
+	current_item =	sorted_function_list[element]	
+	if current_item[0] == '':
+		element += 1
+		current_item =	sorted_function_list[element]	
+	startLine, endLine = find_function_body(fileName,current_item[1])
+	enter_instrument = int(startLine) + 2
+	exit_instrument = int(endLine) - 1
+	inputFile = fileName
+	with open(inputFile,'r') as input, open(resultFile, 'a+') as outputFile:
+		input.seek(0)
+		for line in input:
+			content = line
+			lineNumber += 1
+			#print ("line = {}, lineNumber = {} and endLine = {}".format(line, lineNumber, endLine))
+			if lineNumber == enter_instrument:
+				outputFile.write('printf("INSTRUMENTATION_TOOL::Entered into file %s: in function %s, at line number %d \\n", __FILE__, __func__, __LINE__);\n')
+				outputFile.write(content);
+			elif lineNumber == exit_instrument:
+				#print (content)
+				outputFile.write(content);
+				outputFile.write('printf("INSTRUMENTATION_TOOL::Exiting function %s, at line number %d from file %s \\n", __func__, __LINE__, __FILE__);\n')
+				if element < len(sorted_function_list) - 1 :
+					element += 1
+					current_item =	sorted_function_list[element]	
+					startLine, endLine = find_function_body(fileName,current_item[1])
+					enter_instrument = int(startLine) + 2
+					exit_instrument = int(endLine) - 1
+
+			else:
+				#print (content)
+				outputFile.write(content);
+
+
 	return
 
 
