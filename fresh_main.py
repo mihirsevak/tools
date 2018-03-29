@@ -34,3 +34,68 @@
 
 # MIHIR-notes:
 # ctags -x --c-kinds=f readtags.c  <-- to list all the functions in a file
+
+
+import argparse
+from function_instrument import shallow_function_instrument, deep_function_instrument
+from file_instrument import shallow_file_instrument, deep_file_instrument
+
+
+
+
+shallow_instrumented = {}
+deep_instrumented = {}
+
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("mode", default="shallow", help="deep, shallow | Should I do deep instrumentation or shallow instrumentation. By default shallow mode.")
+parser.add_argument("file", help="please provide a filename which needs to be instrumented")
+#parser.add_argument("function", dest="function_name", help="please provide a function name which needs to be instrumented", nargs ='?' , action="store")
+parser.add_argument('function', nargs=2, help='please provide a function name which needs to be instrumented')
+parser.add_argument("tree",help="should I instrument entire source tree from this directory??", action = "store_false")
+args = parser.parse_args()
+
+
+
+if args.tree == True:
+	print 'We will instrument all source code files in this direcotry.'
+	all_files = list_all_files()		
+	if args.mode == "deep":
+		print 'we will instrument all source code files in direcotry with deep mode.'
+		for file in all_files:
+			deep_file_instrument(file,startLine=0, endLine='EOF')
+	else:
+		print 'we will instrument all source code files in direcotry with shallow mode.'
+		for file in all_files:
+			shallow_file_instrument(file,startLine=0, endLine='EOF')
+else:
+	if args.mode == "deep":
+		if args.function:
+			#print (parser.parse_args('function'.split()) )
+			print 'we will instrument file {} and function {} in a deep mode'.format(args.file, args.function[1])
+			deep_function_instrument(args.file,args.function[1])
+		else:
+			print 'we will instrument entire file {} in a deep mode'.format(args.file)
+			deep_file_instrument(args.file,startLine=0, endLine='EOF')
+	else:
+		if args.function:
+			#print (parser.parse_args('function'.split()) )
+			print 'we will instrument file {} and function {} in a shallow mode'.format(args.file, args.function[1])
+			shallow_function_instrument(args.file,args.function[1])
+		else:
+			print 'we will instrument entire file {} in a shallow mode'.format(args.file)
+			shallow_file_instrument(args.file,startLine=0, endLine='EOF')
+
+# if args.v :
+# 	print 'we are in verbose mode'
+# if args.b == 'magic.name':
+#     print 'You nailed it!'
+
+
+
+
+
+
+
+

@@ -1,5 +1,17 @@
 #/usr/bin/python
 import os
+import glob
+import datetime
+from shutil import copyfile
+import time
+
+
+
+def chomp(x):
+  if x.endswith("\r\n"): return x[:-2]
+  if x.endswith("\n"): return x[:-1]
+  return x
+
 
 def create_outputfile (inputFile="somefile"):
 	backup = str(inputFile) + '.orig'
@@ -7,7 +19,7 @@ def create_outputfile (inputFile="somefile"):
 	if os.path.exists(backup):
 		pass
 	else:
-		filename,extension = name.split('.')
+		filename,extension = inputFile.split('.')
 		searchname=filename + '_*.' + extension
 		glob.glob(searchname)
 		pass
