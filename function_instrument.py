@@ -50,7 +50,7 @@ def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_funct
 
 	#This is for output file
 	resultFile = create_outputfile(inputFile)
-	print resultFile
+	#print resultFile
 
 
 	with open(inputFile,'r') as input, open(resultFile, 'a+') as outputFile:
@@ -86,15 +86,22 @@ def deep_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 
 
 	# First pass only if we don't know the end point for processing this instrumentation
-
 	if endLine == 'EOF':
-		#To process EOF we have to read the file once any way so building a 
-		#line_offset data structure out of entire file
-		offset = 0
-		for line in inputFile:
-		    line_offset.append(offset)
-		    offset += len(line)
-		inputFile.seek(0)
+		# To collect a start point of first function
+		cmd = "ctags -x --c-kinds=f " + fileName + " | awk '{ print $3 }'"
+		lineNumberList = subprocess.check_output(cmd, shell=True).split('\n')
+		startLine = min(lineNumberList)
+		if startLine == '':
+			lineNumberList.remove(startLine)
+		startLine = min(lineNumberList)
+		with open(fileName,'r') as inputFile:
+			#To process EOF we have to read the file once any way so building a 
+			#line_offset data structure out of entire file
+			offset = 0
+			for line in inputFile:
+			    line_offset.append(offset)
+			    offset += len(line)
+			inputFile.seek(0)
 		endLine = line_offset[-1]
 
 
@@ -119,6 +126,8 @@ def deep_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 				outputFile.write(content);
 
 		return
+
+
 
 
 def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
@@ -157,18 +166,27 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 				outputFile.write(content);
 			elif lineNumber == exit_instrument:
 				#print (content)
-				outputFile.write(content);
-				outputFile.write('printf("INSTRUMENTATION_TOOL::Exiting function %s, at line number %d from file %s \\n", __func__, __LINE__, __FILE__);\n')
-				if element < len(sorted_function_list) - 1 :
-					element += 1
-					current_item =	sorted_function_list[element]	
-					startLine, endLine = find_function_body(fileName,current_item[1])
-					enter_instrument = int(startLine) + 2
-					exit_instrument = int(endLine) - 1
+				# A case where a line above } is return statement
+				if content.isspace() == False and ( content.split()[0] == 'return' or content.split()[0] == 'return;' ) :
+						outputFile.write('printf("INSTRUMENTATION_TOOL::Exiting function %s, at line number %d from file %s \\n", __func__, __LINE__, __FILE__);\n')
+						outputFile.write(content);
+				else: # A case where a line above } is not a return statement
+					outputFile.write(content);
+					outputFile.write('printf("INSTRUMENTATION_TOOL::Exiting function %s, at line number %d from file %s \\n", __func__, __LINE__, __FILE__);\n')
+					if element < len(sorted_function_list) - 1 :
+						element += 1
+						current_item =	sorted_function_list[element]	
+						startLine, endLine = find_function_body(fileName,current_item[1])
+						enter_instrument = int(startLine) + 2
+						exit_instrument = int(endLine) - 1
 
 			else:
-				#print (content)
-				outputFile.write(content);
+				if content.isspace() == False and ( content.split()[0] == 'return' or content.split()[0] == 'return;' ) :
+						outputFile.write('printf("INSTRUMENTATION_TOOL::Exiting function %s, at line number %d from file %s \\n", __func__, __LINE__, __FILE__);\n')
+						outputFile.write(content);
+				else:
+					#print (content)
+					outputFile.write(content);
 
 
 	return
@@ -190,5 +208,7 @@ def deep_function_instrument(inputFile="Do_Not_Know",functionName="some_function
 
 
 if __name__ == '__main__':
-		shallow_file_instrument('test.c')
+		deep_file_instrument('test.c')
+		#deep_function_instrument('test.c','display_tree')
+		#shallow_file_instrument('test.c')
 		#shallow_function_instrument('test.c','display_tree')

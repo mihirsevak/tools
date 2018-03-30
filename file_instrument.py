@@ -63,6 +63,56 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	return
 
 
+
+def real_function_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
+	
+	lineNumber = 0	
+	line_offset = []
+
+	resultFile = create_outputfile(fileName)
+	print resultFile
+
+
+	# First pass only if we don't know the end point for processing this instrumentation
+	#inputFile = fileName
+	if endLine == 'EOF':
+		#To process EOF we have to read the file once any way so building a 
+		#line_offset data structure out of entire file
+		offset = 0
+		for line in inputFile:
+		    line_offset.append(offset)
+		    offset += len(line)
+		inputFile.seek(0)
+		endLine = line_offset[-1]
+
+
+
+	with open(fileName,'r') as inputFile, open(resultFile, 'a+') as outputFile:
+		for line in inputFile:
+
+			content = line
+			lineNumber += 1
+			#print ("line = {}, lineNumber = {}, startLine = {} and endLine = {}".format(line, lineNumber, startLine, endLine))
+			if int(lineNumber) > int(startLine) and int(lineNumber) <= int(endLine):
+				#print ("came in instrumentation block");
+				if content.isspace() != True and chomp(content)[-1] == ';' :
+					#print ("last character in line = {}".format(line[-1]))
+					outputFile.write('printf("INSTRUMENTATION_TOOL::In file %s: in function %s, at line number %d \\n", __FILE__, __func__, __LINE__);\n')
+					outputFile.write(content);
+				else:
+					#print (content)
+					outputFile.write(content);
+			else:
+				#print (content)
+				outputFile.write(content);
+
+		return
+
+
+
+
+
+
 if __name__ == '__main__':
 	# if len(sys.argv) == 4:
 	# 	print ("filename = {}, startLine = {}, endLine = {}".format(sys.argv[1], sys.argv[2], sys.argv[3]) )
