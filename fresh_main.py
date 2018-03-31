@@ -35,10 +35,15 @@
 # MIHIR-notes:
 # ctags -x --c-kinds=f readtags.c  <-- to list all the functions in a file
 
+'''
+Left to do as of March 30th 2018
+1) creating a json file/datastructure which can keep track of instrumentation status
+2) file nameing in a proper way so new file is created in a meaningful way
+
+'''
 
 import argparse
-from function_instrument import shallow_function_instrument, deep_function_instrument
-from file_instrument import shallow_file_instrument, deep_file_instrument
+from function_instrument import shallow_function_instrument, deep_function_instrument, shallow_file_instrument, deep_file_instrument
 
 
 
@@ -47,21 +52,37 @@ shallow_instrumented = {}
 deep_instrumented = {}
 
 
+'''
+Use cases 
+debugger --tree shallow|deep
+debugger file <function> shallow|deep
 
-parser = argparse.ArgumentParser()
-parser.add_argument("mode", default="shallow", help="deep, shallow | Should I do deep instrumentation or shallow instrumentation. By default shallow mode.")
-parser.add_argument("file", help="please provide a filename which needs to be instrumented")
-#parser.add_argument("function", dest="function_name", help="please provide a function name which needs to be instrumented", nargs ='?' , action="store")
-parser.add_argument('function', nargs=2, help='please provide a function name which needs to be instrumented')
-parser.add_argument("tree",help="should I instrument entire source tree from this directory??", action = "store_false")
+'''
+
+
+import sys
+
+
+args=sys.argv[1:]
+tree_mode=False
+parser = argparse.ArgumentParser(description = "program")
+if args and args[0].startswith("--"):
+    parser.add_argument("--tree", nargs='?')
+    parser.add_argument("--mode", nargs='?', default='shallow')
+    tree_mode = True
+else:
+    parser = argparse.ArgumentParser(description = "program")
+    parser.add_argument("file", nargs=2)
+    parser.add_argument("--function", nargs='?')
+    parser.add_argument("--mode", nargs='?', default='shallow')
+    tree_mode = False
 args = parser.parse_args()
+#print args
 
-
-
-if args.tree == True:
+if tree_mode == True:
 	print 'We will instrument all source code files in this direcotry.'
 	all_files = list_all_files()		
-	if args.mode == "deep":
+   	if args.mode == 'deep':
 		print 'we will instrument all source code files in direcotry with deep mode.'
 		for file in all_files:
 			deep_file_instrument(file,startLine=0, endLine='EOF')
@@ -69,33 +90,27 @@ if args.tree == True:
 		print 'we will instrument all source code files in direcotry with shallow mode.'
 		for file in all_files:
 			shallow_file_instrument(file,startLine=0, endLine='EOF')
-else:
-	if args.mode == "deep":
-		if args.function:
-			#print (parser.parse_args('function'.split()) )
-			print 'we will instrument file {} and function {} in a deep mode'.format(args.file, args.function[1])
-			deep_function_instrument(args.file,args.function[1])
+
+else: # WE are in file mode
+	#print 'arg.file =', args.file
+   	print 'arg.function =', args.function
+   	#print 'arg.mode =', args.mode
+	if args.function == None:
+		if args.mode == 'deep':
+			print 'we will instrument entire file {} in a deep mode'.format(args.file[1])
+			deep_file_instrument(args.file[1])
 		else:
-			print 'we will instrument entire file {} in a deep mode'.format(args.file)
-			deep_file_instrument(args.file,startLine=0, endLine='EOF')
+			print 'we will instrument entire file {} in a shallow mode'.format(args.file[1])
+			shallow_file_instrument(args.file[1])
 	else:
-		if args.function:
-			#print (parser.parse_args('function'.split()) )
-			print 'we will instrument file {} and function {} in a shallow mode'.format(args.file, args.function[1])
-			shallow_function_instrument(args.file,args.function[1])
+		if args.mode == 'deep':
+			print 'we will instrument file {} and function {} in a deep mode'.format(args.file[1], args.function)
+			deep_function_instrument(args.file[1],args.function)
 		else:
-			print 'we will instrument entire file {} in a shallow mode'.format(args.file)
-			shallow_file_instrument(args.file,startLine=0, endLine='EOF')
-
-# if args.v :
-# 	print 'we are in verbose mode'
-# if args.b == 'magic.name':
-#     print 'You nailed it!'
+			print 'we will instrument file {} and function {} in a shallow mode'.format(args.file[1], args.function)
+			shallow_function_instrument(args.file[1],args.function)
 
 
-
-
-
-
-
+     
+     
 

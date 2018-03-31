@@ -208,7 +208,7 @@ def deep_function_instrument(inputFile="Do_Not_Know",functionName="some_function
 
 
 if __name__ == '__main__':
-		deep_file_instrument('test.c')
+		#deep_file_instrument('test.c')
 		#deep_function_instrument('test.c','display_tree')
-		#shallow_file_instrument('test.c')
+		shallow_file_instrument('test.c')
 		#shallow_function_instrument('test.c','display_tree')
