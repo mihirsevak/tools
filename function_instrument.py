@@ -6,7 +6,7 @@ import glob
 import time
 import os.path
 #from fresh_main import shallow_instrumented, deep_instrumented
-from file_operations import create_outputfile, chomp
+from file_operations import create_outputfile, post_instrumentation_fileops, chomp
 from collections import OrderedDict
 
 
@@ -49,11 +49,11 @@ def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_funct
 	endLine = line_offset[-1]
 
 	#This is for output file
-	resultFile = create_outputfile(inputFile)
+	readinFile, resultFile = create_outputfile(inputFile)
 	#print resultFile
 
 
-	with open(inputFile,'r') as input, open(resultFile, 'a+') as outputFile:
+	with open(readinFile,'r') as input, open(resultFile, 'a+') as outputFile:
 		for line in input:
 
 			content = line
@@ -72,7 +72,9 @@ def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_funct
 				#print (content)
 				outputFile.write(content);
 
-		return
+	post_instrumentation_fileops(inputFile, readinFile, resultFile)
+
+	return
 
 
 
@@ -81,7 +83,7 @@ def deep_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	lineNumber = 0	
 	line_offset = []
 
-	resultFile = create_outputfile(fileName)
+	readinFile, resultFile = create_outputfile(fileName)
 	print resultFile
 
 
@@ -106,7 +108,7 @@ def deep_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 
 
 
-	with open(fileName,'r') as inputFile, open(resultFile, 'a+') as outputFile:
+	with open(readinFile,'r') as inputFile, open(resultFile, 'a+') as outputFile:
 		for line in inputFile:
 
 			content = line
@@ -125,7 +127,9 @@ def deep_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 				#print (content)
 				outputFile.write(content);
 
-		return
+	post_instrumentation_fileops(fileName, readinFile, resultFile)
+
+	return
 
 
 
@@ -140,7 +144,7 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	#print functionNameList
 
 	#This is for output file
-	resultFile = create_outputfile(fileName)
+	readinFile, resultFile = create_outputfile(fileName)
 	print resultFile
 
 	lineNumber = 0	
@@ -155,7 +159,7 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	enter_instrument = int(startLine) + 2
 	exit_instrument = int(endLine) - 1
 	inputFile = fileName
-	with open(inputFile,'r') as input, open(resultFile, 'a+') as outputFile:
+	with open(readinFile,'r') as input, open(resultFile, 'a+') as outputFile:
 		input.seek(0)
 		for line in input:
 			content = line
@@ -188,6 +192,7 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 					#print (content)
 					outputFile.write(content);
 
+	post_instrumentation_fileops(fileName, readinFile, resultFile)
 
 	return
 
@@ -211,4 +216,4 @@ if __name__ == '__main__':
 		#deep_file_instrument('test.c')
 		#deep_function_instrument('test.c','display_tree')
 		shallow_file_instrument('test.c')
-		#shallow_function_instrument('test.c','display_tree')
+		#shallow_function_instrument('test.c','main')
