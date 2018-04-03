@@ -8,7 +8,7 @@ import os.path
 #from fresh_main import shallow_instrumented, deep_instrumented
 from file_operations import create_outputfile, post_instrumentation_fileops, chomp
 from collections import OrderedDict
-
+from json-try import add_func
 
 
 
@@ -25,12 +25,8 @@ def find_function_body(inputFile="Do_Not_Know",functionName="some_function"):
 
 
 def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_function"):
-	# TODO: Write to a global datastructure that this function is instrumented
-	#if functionName in shallow_instrumented:
-	#	return
-	#else:
-	#	shallow_instrumented[functionName] 
-	#print functionName
+	if add_func(functionName, 'shallow') == True:
+		return
 
 	startLine, endLine = find_function_body(inputFile,functionName)
 	enter_instrument = int(startLine) + 2
@@ -198,11 +194,9 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 
 
 def deep_function_instrument(inputFile="Do_Not_Know",functionName="some_function"):
-	# TODO: Write to a global datastructure that this function is instrumented
-	#if functionName in deep_instrumented:
-	#	return
-	#else:
-	#	deep_instrumented[functionName] == True
+	if add_func(functionName,'deep') == True:
+		return
+
 	startLine, endLine= find_function_body(inputFile,functionName)
 
 	deep_file_instrument(inputFile, startLine, endLine)

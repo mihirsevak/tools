@@ -44,12 +44,11 @@ Left to do as of March 30th 2018
 
 import argparse
 from function_instrument import shallow_function_instrument, deep_function_instrument, shallow_file_instrument, deep_file_instrument
+from json-try import init_json, finished_json
 
 
 
 
-shallow_instrumented = {}
-deep_instrumented = {}
 
 
 '''
@@ -63,6 +62,9 @@ debugger file <function> shallow|deep
 import sys
 
 
+
+
+init_json()
 args=sys.argv[1:]
 tree_mode=False
 parser = argparse.ArgumentParser(description = "program")
@@ -111,6 +113,7 @@ else: # WE are in file mode
 			shallow_function_instrument(args.file[1],args.function)
 
 
+finished_json()
      
      
 
