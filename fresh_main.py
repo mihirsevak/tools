@@ -36,16 +36,31 @@
 # ctags -x --c-kinds=f readtags.c  <-- to list all the functions in a file
 
 '''
-Left to do as of March 30th 2018
-1) creating a json file/datastructure which can keep track of instrumentation status
-2) file nameing in a proper way so new file is created in a meaningful way
+Left to do as of April 4th 2018 in Beta version
+1) creating a json file/datastructure which can keep track of instrumentation status 
+   JSON file must be created per source file.
+   A) Should this file reside in the same place as source code file?
+   B) Should this file reside in /opt/debugger directory?
+   C) When should this file be cleaned up?
+   D) Should this JSON file be deleted when cleanup is run?
+
+2) Throw exceptions and handle failures gracefully. Create a list for uninstrumented c files
+3) Wire up cleanup 
+4) Create an installer which installs all the files in /opt/debugger folder 
+5) Check how can we work only with binary files and don't have to distribute python source code
+
+Next version:
+1) How to handle C++ where function signature may be over loaded and there may be multiple 
+funcionts with the same name [create a list of function and line numbers]
+2) Support for other programming languages
 
 '''
 
 import argparse
 from function_instrument import shallow_function_instrument, deep_function_instrument, shallow_file_instrument, deep_file_instrument
+from file_operations import script_cleanup
 from json_utility import init_json, finished_json
-
+from sys import exit
 
 
 
@@ -53,8 +68,8 @@ from json_utility import init_json, finished_json
 
 '''
 Use cases 
-debugger --tree shallow|deep
-debugger file <function> shallow|deep
+debugger --tree (shallow|deep) | (cleanup)
+debugger file (<function> shallow|deep) | (cleanup)
 
 '''
 
@@ -72,7 +87,7 @@ if args and args[0].startswith("--"):
     parser.add_argument("--tree", nargs='?')
     parser.add_argument("--mode", nargs='?', default='shallow')
     parser.add_argument("--restore")
-    parser.add_argument("--clean")
+    parser.add_argument("--clean", nargs='?', default='True')
     tree_mode = True
 else:
     parser = argparse.ArgumentParser(description = "program")
@@ -80,15 +95,19 @@ else:
     parser.add_argument("--function", nargs='?')
     parser.add_argument("--mode", nargs='?', default='shallow')
     parser.add_argument("--restore")
-    parser.add_argument("--clean")
+    parser.add_argument("--clean", nargs='?', default='True')
     tree_mode = False
 args = parser.parse_args()
 #print args
+print args.clean
 
 if tree_mode == True:
 	print 'We will instrument all source code files in this direcotry.'
 	all_files = list_all_files()		
-   	if args.mode == 'deep':
+	if args.clean == None: 
+		print 'We have not implemented this for entire tree yet'	
+		exit(0) 
+   	elif args.mode == 'deep':
 		print 'we will instrument all source code files in direcotry with deep mode.'
 		for file in all_files:
 			deep_file_instrument(file,startLine=0, endLine='EOF')
@@ -101,7 +120,11 @@ else: # WE are in file mode
 	#print 'arg.file =', args.file
    	print 'arg.function =', args.function
    	#print 'arg.mode =', args.mode
-	if args.function == None:
+	if args.clean == None:
+		print 'going for cleanup of file ', args.file[1]
+		script_cleanup(args.file[1])
+		exit(0) 
+	elif args.function == None:
 		if args.mode == 'deep':
 			print 'we will instrument entire file {} in a deep mode'.format(args.file[1])
 			deep_file_instrument(args.file[1])

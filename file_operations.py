@@ -1,6 +1,7 @@
 #/usr/bin/python
 import glob
 import datetime
+import subprocess
 from shutil import copyfile, move
 import time
 from os import listdir,rename, symlink, readlink, unlink, getcwd, remove
@@ -160,6 +161,16 @@ def cleanup(fileName='somefile',location='pwd') :
 
 	return	
 
+def script_cleanup(fileName):
+	cmd = "clean.sh "+ fileName
+	result = subprocess.call(cmd, shell=True)
+	if result == '0':
+		return;
+	else:
+		#Throw some exception and get out
+		pass
+
+	return 
 
 
 if __name__ == '__main__':

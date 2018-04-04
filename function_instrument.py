@@ -16,15 +16,15 @@ def find_function_body(inputFile="Do_Not_Know",functionName="some_function"):
 	#filename="/home/parallels/Downloads/ctags-5.8/readtags.c"
 	cmd = "ctags -x --c-kinds=f " + inputFile + " | grep \'" + functionName +" \' | awk '{ print $3 }'"
 	function_line = subprocess.check_output(cmd, shell=True)
-	print 'INSTRU-DEBUG:: function definationLine = ' + function_line + ' for function = ' + functionName
-        #Searching for openning brace
+	#print 'INSTRU-DEBUG:: function definationLine = ' + function_line + ' for function = ' + functionName
+	#Searching for openning brace
 	cmd = "awk -v s=" + chomp(function_line) + "  'NR>=s && /{/              {c++} NR>=s && /{/ && c && !--c {print NR; exit}' " + inputFile
 	beginning_line = subprocess.check_output(cmd,shell=True)
-	print 'INSTRU-DEBUG:: function body beginningLine = ' + beginning_line + ' for function = ' + functionName
-        #Searching for closing brace
+	#print 'INSTRU-DEBUG:: function body beginningLine = ' + beginning_line + ' for function = ' + functionName
+	#Searching for closing brace
 	cmd = "awk -v s=" + chomp(beginning_line) + "  'NR>=s && /{/              {c++} NR>=s && /}/ && c && !--c {print NR; exit}' " + inputFile
 	ending_line = subprocess.check_output(cmd,shell=True)
-	print 'INSTRU-DEBUG:: function endingLine = ', ending_line
+	#print 'INSTRU-DEBUG:: function endingLine = ', ending_line
 	#print ending_line
 	return (beginning_line, ending_line)
 
