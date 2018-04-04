@@ -15,8 +15,13 @@ from json_utility import add_func
 def find_function_body(inputFile="Do_Not_Know",functionName="some_function"):
 	#filename="/home/parallels/Downloads/ctags-5.8/readtags.c"
 	cmd = "ctags -x --c-kinds=f " + inputFile + " | grep \'" + functionName +" \' | awk '{ print $3 }'"
-	beginning_line = subprocess.check_output(cmd, shell=True)
-	print 'INSTRU-DEBUG:: function begginningLine = ' + beginning_line + ' for function = ' + functionName
+	function_line = subprocess.check_output(cmd, shell=True)
+	print 'INSTRU-DEBUG:: function definationLine = ' + function_line + ' for function = ' + functionName
+        #Searching for openning brace
+	cmd = "awk -v s=" + chomp(function_line) + "  'NR>=s && /{/              {c++} NR>=s && /{/ && c && !--c {print NR; exit}' " + inputFile
+	beginning_line = subprocess.check_output(cmd,shell=True)
+	print 'INSTRU-DEBUG:: function body beginningLine = ' + beginning_line + ' for function = ' + functionName
+        #Searching for closing brace
 	cmd = "awk -v s=" + chomp(beginning_line) + "  'NR>=s && /{/              {c++} NR>=s && /}/ && c && !--c {print NR; exit}' " + inputFile
 	ending_line = subprocess.check_output(cmd,shell=True)
 	print 'INSTRU-DEBUG:: function endingLine = ', ending_line
@@ -30,7 +35,7 @@ def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_funct
 		return
 
 	startLine, endLine = find_function_body(inputFile,functionName)
-	enter_instrument = int(startLine) + 2
+	enter_instrument = int(startLine) + 1
 	exit_instrument = int(endLine) - 1
 	print 'INSTRU-DEBUG:: function {}, startLine = {}, endLine = {}, enter_instrument = {} and exit_instrument = {}'.format(functionName, startLine, endLine, enter_instrument, exit_instrument)
 	
@@ -158,7 +163,7 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 		element += 1
 		current_item =	sorted_function_list[element]	
 	startLine, endLine = find_function_body(fileName,current_item[1])
-	enter_instrument = int(startLine) + 2
+	enter_instrument = int(startLine) + 1
 	exit_instrument = int(endLine) 
 	#if (int(startLine) + 2) < (int(endLine) -1) :
 	#	exit_instrument = int(endLine) - 1
@@ -190,7 +195,7 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 						current_item =	sorted_function_list[element]	
 						#print 'INSTRU-DEBUG:: functionName = ', current_item[1]
 						startLine, endLine = find_function_body(fileName,current_item[1])
-						enter_instrument = int(startLine) + 2
+						enter_instrument = int(startLine) + 1
 						exit_instrument = int(endLine) 
 
 			else:
