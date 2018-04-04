@@ -58,7 +58,7 @@ funcionts with the same name [create a list of function and line numbers]
 
 import argparse
 from function_instrument import shallow_function_instrument, deep_function_instrument, shallow_file_instrument, deep_file_instrument
-from file_operations import script_cleanup
+from file_operations import script_cleanup, list_all_files
 from json_utility import init_json, finished_json
 from sys import exit
 
@@ -105,7 +105,9 @@ if tree_mode == True:
 	print 'We will instrument all source code files in this direcotry.'
 	all_files = list_all_files()		
 	if args.clean == None: 
-		print 'We have not implemented this for entire tree yet'	
+		print 'going for cleanup entire tree'
+		for file in all_files:
+			script_cleanup(file)
 		exit(0) 
    	elif args.mode == 'deep':
 		print 'we will instrument all source code files in direcotry with deep mode.'

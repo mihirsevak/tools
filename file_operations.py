@@ -4,7 +4,7 @@ import datetime
 import subprocess
 from shutil import copyfile, move
 import time
-from os import listdir,rename, symlink, readlink, unlink, getcwd, remove
+from os import listdir,rename, symlink, readlink, unlink, getcwd, remove, walk
 from os.path import isfile, join, islink, exists
 
 
@@ -78,15 +78,15 @@ def post_instrumentation_fileops(originalFile, readinFile, resultFile ):
 def list_all_files (location='pwd'):
 	all_files = []
 	if location == 'pwd':
-		directory= os.getcwd()
+		directory= getcwd()
 	else:
 		directory = location
 
-	for root, dirs, files in os.walk(directory):
+	for root, dirs, files in walk(directory):
 	  for file in files:
 	    if file.endswith(".c"):
 	      #print(os.path.join(root, file))
-	      all_files.append(os.path.join(root, file))
+	      all_files.append(join(root, file))
 
 	return all_files
 
