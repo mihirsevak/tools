@@ -52,7 +52,7 @@ def finished_json():
 
 
 
-if name == '__main__' :
+if __name__ == '__main__' :
     init_json()
     add_func('main1','deep')
     add_func('main1','shallow')

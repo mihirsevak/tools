@@ -44,7 +44,7 @@ Left to do as of March 30th 2018
 
 import argparse
 from function_instrument import shallow_function_instrument, deep_function_instrument, shallow_file_instrument, deep_file_instrument
-from json-try import init_json, finished_json
+from json_utility import init_json, finished_json
 
 
 
@@ -71,12 +71,16 @@ parser = argparse.ArgumentParser(description = "program")
 if args and args[0].startswith("--"):
     parser.add_argument("--tree", nargs='?')
     parser.add_argument("--mode", nargs='?', default='shallow')
+    parser.add_argument("--restore")
+    parser.add_argument("--clean")
     tree_mode = True
 else:
     parser = argparse.ArgumentParser(description = "program")
     parser.add_argument("file", nargs=2)
     parser.add_argument("--function", nargs='?')
     parser.add_argument("--mode", nargs='?', default='shallow')
+    parser.add_argument("--restore")
+    parser.add_argument("--clean")
     tree_mode = False
 args = parser.parse_args()
 #print args

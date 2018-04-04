@@ -8,17 +8,18 @@ import os.path
 #from fresh_main import shallow_instrumented, deep_instrumented
 from file_operations import create_outputfile, post_instrumentation_fileops, chomp
 from collections import OrderedDict
-from json-try import add_func
+from json_utility import add_func
 
 
 
 def find_function_body(inputFile="Do_Not_Know",functionName="some_function"):
 	#filename="/home/parallels/Downloads/ctags-5.8/readtags.c"
-	cmd = "ctags -x --c-kinds=f " + inputFile + " | grep " + functionName +" | awk '{ print $3 }'"
+	cmd = "ctags -x --c-kinds=f " + inputFile + " | grep \'" + functionName +" \' | awk '{ print $3 }'"
 	beginning_line = subprocess.check_output(cmd, shell=True)
-	#print beginning_line
+	print 'INSTRU-DEBUG:: function begginningLine = ' + beginning_line + ' for function = ' + functionName
 	cmd = "awk -v s=" + chomp(beginning_line) + "  'NR>=s && /{/              {c++} NR>=s && /}/ && c && !--c {print NR; exit}' " + inputFile
 	ending_line = subprocess.check_output(cmd,shell=True)
+	print 'INSTRU-DEBUG:: function endingLine = ', ending_line
 	#print ending_line
 	return (beginning_line, ending_line)
 
@@ -31,6 +32,7 @@ def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_funct
 	startLine, endLine = find_function_body(inputFile,functionName)
 	enter_instrument = int(startLine) + 2
 	exit_instrument = int(endLine) - 1
+	print 'INSTRU-DEBUG:: function {}, startLine = {}, endLine = {}, enter_instrument = {} and exit_instrument = {}'.format(functionName, startLine, endLine, enter_instrument, exit_instrument)
 	
 	#First pass to build line offset list
 	lineNumber = 0	
@@ -137,6 +139,8 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	functionNameList = subprocess.check_output(cmd, shell=True).split('\n')
 	cmd = "ctags -x --c-kinds=f " + fileName + " | awk '{ print $3 }'"
 	lineNumberList = subprocess.check_output(cmd, shell=True).split('\n')
+	lineNumberList.remove('')
+	lineNumberList = map(int, lineNumberList)
 	#print functionNameList
 
 	#This is for output file
@@ -148,16 +152,24 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	sorted_function_list = sorted(zip(lineNumberList, functionNameList))
 	element = 0
 	current_item =	sorted_function_list[element]	
+	#print current_item
+	#print sorted_function_list
 	if current_item[0] == '':
 		element += 1
 		current_item =	sorted_function_list[element]	
 	startLine, endLine = find_function_body(fileName,current_item[1])
 	enter_instrument = int(startLine) + 2
-	exit_instrument = int(endLine) - 1
+	exit_instrument = int(endLine) 
+	#if (int(startLine) + 2) < (int(endLine) -1) :
+	#	exit_instrument = int(endLine) - 1
+	#else:
+	#	exit_instrument = int(endLine) 
+	#print 'INSTRU-DEBUG:: function {}, startLine = {}, endLine = {}, enter_instrument = {} and exit_instrument = {}'.format(current_item[1], startLine[:-1], endLine[:-1], enter_instrument, exit_instrument)
 	inputFile = fileName
 	with open(readinFile,'r') as input, open(resultFile, 'a+') as outputFile:
 		input.seek(0)
 		for line in input:
+			#print 'INSTRU-DEBUG:: function {}, startLine = {}, endLine = {}, enter_instrument = {} and exit_instrument = {}'.format(current_item[1], startLine[:-1], endLine[:-1], enter_instrument, exit_instrument)
 			content = line
 			lineNumber += 1
 			#print ("line = {}, lineNumber = {} and endLine = {}".format(line, lineNumber, endLine))
@@ -171,14 +183,15 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 						outputFile.write('printf("INSTRUMENTATION_TOOL::Exiting function %s, at line number %d from file %s \\n", __func__, __LINE__, __FILE__);\n')
 						outputFile.write(content);
 				else: # A case where a line above } is not a return statement
-					outputFile.write(content);
 					outputFile.write('printf("INSTRUMENTATION_TOOL::Exiting function %s, at line number %d from file %s \\n", __func__, __LINE__, __FILE__);\n')
+					outputFile.write(content);
 					if element < len(sorted_function_list) - 1 :
 						element += 1
 						current_item =	sorted_function_list[element]	
+						#print 'INSTRU-DEBUG:: functionName = ', current_item[1]
 						startLine, endLine = find_function_body(fileName,current_item[1])
 						enter_instrument = int(startLine) + 2
-						exit_instrument = int(endLine) - 1
+						exit_instrument = int(endLine) 
 
 			else:
 				if content.isspace() == False and ( content.split()[0] == 'return' or content.split()[0] == 'return;' ) :

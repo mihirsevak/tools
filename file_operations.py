@@ -95,7 +95,7 @@ def restore_original(fileName):
 	print originalFile
 	if exists(originalFile):
 		unlink(fileName)
-		symlink(originalFile,fileName)
+		copyfile(originalFile,fileName)
 	return
 
 
@@ -111,18 +111,19 @@ def restore_all_original(location='pwd'):
 		restore_original(file)
 
 
-def cleanup_instru(fileName):
+def remove_instru(fileName):
 	filename,extension = fileName.split('.')
 	originalFile = fileName + '.orig'
 	instrumented = filename + '_instru.' + extension  
 	if exists (instrumented) :
 		if islink(fileName) and readlink(fileName) == str(instrumented) :
 			unlink(fileName)
-			symlink(originalFile,fileName)
+			copyfile(originalFile,fileName)
 		remove(instrumented)	
 	return
 
-def cleanup_all_instru(location='pwd'):
+
+def remove_all_instru(location='pwd'):
 	current_directory = getcwd()
 	if location != 'pwd':
 		directory = location
@@ -135,10 +136,36 @@ def cleanup_all_instru(location='pwd'):
 		cleanup_instru(file)
 
 
+def cleanup(fileName='somefile',location='pwd') :
+	'''
+	1) if it is just a file restore original file 
+	2) remove .orig file related to file
+	3) remove instru files related to file
+
+	if it is a whole directory -- 
+	1) get all the files in a directory and repeat the above listed process 
+	'''
+	if fileName != 'somefile' :
+		restore_original(fileName)
+		remove_instru(fileName)
+		origFileName = str(fileName) + '.orig'
+		remove(origFileName)
+	if location != 'pwd' :
+		all_files = list_all_files(location)
+		for file in all_files:
+			restore_original(fileName)
+			remove_instru(fileName)
+			origFileName = str(fileName) + '.orig'
+			remove(origFileName)
+
+	return	
+
+
+
 if __name__ == '__main__':
 	#list_all_files('/home/parallels/Downloads/ctags-5.8')
 	#print create_outputfile('test.c')
 	#print post_instrumentation_fileops('test.c', 'test_instru.c','test_instru_1.c')
 	#print post_instrumentation_fileops('test.c', 'test.c','test_instru.c')
 	#restore_original('test.c')
-	print cleanup_all_instru()
+	print remove_all_instru()
