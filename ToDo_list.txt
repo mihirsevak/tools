@@ -1,0 +1,2 @@
+1. Symlink has to be working irrespective of which location the debugger has been invoked.
+2. In tree mode all_files list has to be created properly. Listing only .c files2. In tree mode all_files list has to be created properly. Listing only .c files
