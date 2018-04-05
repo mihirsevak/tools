@@ -57,7 +57,11 @@ def post_instrumentation_fileops(originalFile, readinFile, resultFile ):
 	if exists(originalFile):
 		newName = str(originalFile) + '.bkp'
 		move(originalFile, newName)
-		symlink(instrumented, originalFile)
+		#symlink(instrumented, originalFile)
+		INSTRUMENTED_PATH=getcwd()+'/'+str(instrumented)
+		ORIGINAL_PATH=getcwd()+'/'+str(originalFile)
+		#print 'instrumented_path = {} and original_path = {}'.format(INSTRUMENTED_PATH, ORIGINAL_PATH)
+		symlink(INSTRUMENTED_PATH, ORIGINAL_PATH)
 	return
 
 '''
