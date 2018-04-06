@@ -20,11 +20,17 @@ if instrumetation file exists then we use instrumentaed file as an
 input otherwise we use original file as an input
 '''
 def create_outputfile (inputFile="somefile"):
+	print 'INSTRU-DEBUG:: filename = ', inputFile
 	backup = str(inputFile) + '.orig'
 	# To preserve prestine copy of file all the time
 	if not exists(backup):
 		copyfile(inputFile, backup)
-	filename,extension = inputFile.split('.')
+	try:
+		filename,extension = inputFile.split('.')
+	except:
+		#following has to be tested for other types of files like java, ruby etc.
+		extension = inputFile.split('.')[-1]
+		filename = '.'.join(inputFile.split('.')[:-1])
 	instrumented = filename + '_instru.' + extension  
 	readinFile = inputFile
 	resultFile = instrumented
@@ -47,7 +53,12 @@ file as the actual file.
 '''
 def post_instrumentation_fileops(originalFile, readinFile, resultFile ):
 	backup = str(originalFile) + '.orig'
-	filename,extension = originalFile.split('.')
+	try:
+		filename,extension = originalFile.split('.')
+	except:
+		#following has to be tested for other types of files like java, ruby etc.
+		extension = originalFile.split('.')[-1]
+		filename = '.'.join(originalFile.split('.')[:-1])
 	instrumented = filename + '_instru.' + extension  
 	if str(resultFile) != instrumented:
 		rename(resultFile,instrumented)
@@ -58,8 +69,14 @@ def post_instrumentation_fileops(originalFile, readinFile, resultFile ):
 		newName = str(originalFile) + '.bkp'
 		move(originalFile, newName)
 		#symlink(instrumented, originalFile)
-		INSTRUMENTED_PATH=getcwd()+'/'+str(instrumented)
-		ORIGINAL_PATH=getcwd()+'/'+str(originalFile)
+		if getcwd() not in str(instrumented): 
+			INSTRUMENTED_PATH=getcwd()+'/'+str(instrumented)
+		else:
+			INSTRUMENTED_PATH=str(instrumented)
+		if getcwd() not in str(originalFile): 
+			ORIGINAL_PATH=getcwd()+'/'+str(originalFile)
+		else:
+			ORIGINAL_PATH=str(originalFile)
 		#print 'instrumented_path = {} and original_path = {}'.format(INSTRUMENTED_PATH, ORIGINAL_PATH)
 		symlink(INSTRUMENTED_PATH, ORIGINAL_PATH)
 	return
@@ -80,17 +97,21 @@ def post_instrumentation_fileops(originalFile, readinFile, resultFile ):
 '''
 
 def list_all_files (location='pwd'):
+	print 'came in list_all_files function'
 	all_files = []
 	if location == 'pwd':
 		directory= getcwd()
 	else:
 		directory = location
 
+	print directory
 	for root, dirs, files in walk(directory):
 	  for file in files:
 	    if file.endswith(".c"):
-	      #print(os.path.join(root, file))
+	      print(join(root, file))
 	      all_files.append(join(root, file))
+	      #print(file)
+	      #all_files.append(file)
 
 	return all_files
 
@@ -178,9 +199,11 @@ def script_cleanup(fileName):
 
 
 if __name__ == '__main__':
-	#list_all_files('/home/parallels/Downloads/ctags-5.8')
+	print 'came in file_operations.py script'
+	print list_all_files(location='pwd')
+	print 'just called list_all_files function'
 	#print create_outputfile('test.c')
 	#print post_instrumentation_fileops('test.c', 'test_instru.c','test_instru_1.c')
 	#print post_instrumentation_fileops('test.c', 'test.c','test_instru.c')
 	#restore_original('test.c')
-	print remove_all_instru()
+	#print remove_all_instru()

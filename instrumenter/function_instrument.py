@@ -14,18 +14,25 @@ from json_utility import add_func
 
 def find_function_body(inputFile="Do_Not_Know",functionName="some_function"):
 	#filename="/home/parallels/Downloads/ctags-5.8/readtags.c"
-	cmd = "ctags -x --c-kinds=f " + inputFile + " | grep \'" + functionName +" \' | awk '{ print $3 }'"
+	cmd = "ctags -x --c-kinds=f " + inputFile + " | grep \'^" + functionName +" \' | awk '{ print $3 }'"
+	print 'INSTRU-DEBUG:: cmd = ',cmd
 	function_line = subprocess.check_output(cmd, shell=True)
-	#print 'INSTRU-DEBUG:: function definationLine = ' + function_line + ' for function = ' + functionName
+	print 'INSTRU-DEBUG:: function definationLine = ' + function_line + ' for function = ' + functionName
 	#Searching for openning brace
-	cmd = "awk -v s=" + chomp(function_line) + "  'NR>=s && /{/              {c++} NR>=s && /{/ && c && !--c {print NR; exit}' " + inputFile
-	beginning_line = subprocess.check_output(cmd,shell=True)
-	#print 'INSTRU-DEBUG:: function body beginningLine = ' + beginning_line + ' for function = ' + functionName
+	try:
+		cmd = "awk -v s=" + chomp(function_line) + "  'NR>=s && /{/              {c++} NR>=s && /{/ && c && !--c {print NR; exit}' " + inputFile
+		beginning_line = subprocess.check_output(cmd,shell=True)
+	except:
+		#THIS IS A HACK AND WILL FIX WHEN WE ADD FUNCTIONALITY FOR C++ FUNCTION OVER LOADING
+		#Write an entry in a result log that this function was not fully processed
+		function_lines = function_line.split('\n');
+		cmd = "awk -v s=" + chomp(function_line[0]) + "  'NR>=s && /{/              {c++} NR>=s && /{/ && c && !--c {print NR; exit}' " + inputFile
+		beginning_line = subprocess.check_output(cmd,shell=True)
+	print 'INSTRU-DEBUG:: function body beginningLine = ' + beginning_line + ' for function = ' + functionName
 	#Searching for closing brace
 	cmd = "awk -v s=" + chomp(beginning_line) + "  'NR>=s && /{/              {c++} NR>=s && /}/ && c && !--c {print NR; exit}' " + inputFile
 	ending_line = subprocess.check_output(cmd,shell=True)
-	#print 'INSTRU-DEBUG:: function endingLine = ', ending_line
-	#print ending_line
+	print 'INSTRU-DEBUG:: function endingLine = ', ending_line
 	return (beginning_line, ending_line)
 
 
@@ -182,7 +189,10 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 	lineNumberList = subprocess.check_output(cmd, shell=True).split('\n')
 	lineNumberList.remove('')
 	lineNumberList = map(int, lineNumberList)
-	#print functionNameList
+	#print 'INSTRU-DEBUG:: functionNameList = {} and lineNumberList = {} '.format(functionNameList, lineNumberList)
+	if not functionNameList or not lineNumberList:
+		#Write an entry in a result log that this file was not processed
+		return 
 
 	#This is for output file
 	readinFile, resultFile = create_outputfile(fileName)
@@ -199,13 +209,24 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 		element += 1
 		current_item =	sorted_function_list[element]	
 	startLine, endLine = find_function_body(fileName,current_item[1])
+	print 'MIHIR-DEBUG:: does it come here?'
+	if chomp(startLine) == '' or chomp(endLine) == '':
+		print 'came in endline is empty block'
+		if len(sorted_function_list) > (element+1):
+			#Add entry in a file showing this file has issue		
+			element += 1
+			current_item =	sorted_function_list[element]	
+			startLine, endLine = find_function_body(fileName,current_item[1])
+		else:
+			#Add entry in a file showing this file has issue		
+			return
 	enter_instrument = int(startLine) + 1
 	exit_instrument = int(endLine) 
 	#if (int(startLine) + 2) < (int(endLine) -1) :
 	#	exit_instrument = int(endLine) - 1
 	#else:
 	#	exit_instrument = int(endLine) 
-	#print 'INSTRU-DEBUG:: function {}, startLine = {}, endLine = {}, enter_instrument = {} and exit_instrument = {}'.format(current_item[1], startLine[:-1], endLine[:-1], enter_instrument, exit_instrument)
+	print 'INSTRU-DEBUG:: function {}, startLine = {}, endLine = {}, enter_instrument = {} and exit_instrument = {}'.format(current_item[1], startLine[:-1], endLine[:-1], enter_instrument, exit_instrument)
 	inputFile = fileName
 	with open(readinFile,'r') as input, open(resultFile, 'a+') as outputFile:
 		input.seek(0)
@@ -231,6 +252,16 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 						current_item =	sorted_function_list[element]	
 						#print 'INSTRU-DEBUG:: functionName = ', current_item[1]
 						startLine, endLine = find_function_body(fileName,current_item[1])
+						if chomp(startLine) == '' or chomp(endLine) == '':
+							print 'does it come here??'
+							if len(sorted_function_list) > (element+1):
+								#Add entry in a file showing this file has issue		
+								element += 1
+								current_item =	sorted_function_list[element]	
+								startLine, endLine = find_function_body(fileName,current_item[1])
+							else:
+								#Add entry in a file showing this file has issue		
+								return
 						enter_instrument = int(startLine) + 1
 						exit_instrument = int(endLine) 
 
@@ -242,6 +273,7 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 					#print (content)
 					outputFile.write(content);
 
+	print 'INSTRU-DEBUG:: filename = {}, readinFile = {}, resultFile = {}'.format(fileName, readinFile, resultFile)
 	post_instrumentation_fileops(fileName, readinFile, resultFile)
 
 	return
