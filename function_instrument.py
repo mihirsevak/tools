@@ -30,6 +30,42 @@ def find_function_body(inputFile="Do_Not_Know",functionName="some_function"):
 
 
 
+def find_function_for_message(inputFile,message='This is MIHIR message'):
+	if message == 'This is MIHIR message':
+		#throw an exception 
+		print 'IDIOT you did not pass the message you are searching for'
+		return
+
+	cmd = "grep -i -n \""  + message  + "\" " +  inputFile + " | awk -F ':' '{ print $1 }' "
+	list_of_result = subprocess.check_output(cmd,shell=True).split('\n')
+	list_of_result.remove('')
+	list_of_result = sorted(map(int, list_of_result))
+	print list_of_result
+
+
+	#Build function name and line number dictionary
+	cmd = "ctags -x --c-kinds=f " + inputFile + " | awk '{ print $1 }'"
+	functionNameList = subprocess.check_output(cmd, shell=True).split('\n')
+	cmd = "ctags -x --c-kinds=f " + inputFile + " | awk '{ print $3 }'"
+	lineNumberList = subprocess.check_output(cmd, shell=True).split('\n')
+	lineNumberList.remove('')
+	lineNumberList = map(int, lineNumberList)
+	#print functionNameList
+
+	sorted_function_list = sorted(zip(lineNumberList, functionNameList))
+	functions_to_be_instrumented = []
+	for k,v in sorted_function_list:
+		beginning_line = int(k)
+		cmd = "awk -v s=" + str(beginning_line) + "  'NR>=s && /{/              {c++} NR>=s && /}/ && c && !--c {print NR; exit}' " + inputFile
+		ending_line = subprocess.check_output(cmd,shell=True)
+		for index in list_of_result:	
+			if int(beginning_line) < int(index) and int(ending_line) > int(index):
+				if v not in functions_to_be_instrumented:
+					functions_to_be_instrumented.append(v)	
+
+	print functions_to_be_instrumented
+	return
+
 def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_function"):
 	if add_func(functionName, 'shallow') == True:
 		return
@@ -37,7 +73,7 @@ def shallow_function_instrument(inputFile="Do_Not_Know",functionName="some_funct
 	startLine, endLine = find_function_body(inputFile,functionName)
 	enter_instrument = int(startLine) + 1
 	exit_instrument = int(endLine) - 1
-	print 'INSTRU-DEBUG:: function {}, startLine = {}, endLine = {}, enter_instrument = {} and exit_instrument = {}'.format(functionName, startLine, endLine, enter_instrument, exit_instrument)
+	#print 'INSTRU-DEBUG:: function {}, startLine = {}, endLine = {}, enter_instrument = {} and exit_instrument = {}'.format(current_item[1], startLine[:-1], endLine[:-1], enter_instrument, exit_instrument)
 	
 	#First pass to build line offset list
 	lineNumber = 0	
@@ -227,5 +263,6 @@ def deep_function_instrument(inputFile="Do_Not_Know",functionName="some_function
 if __name__ == '__main__':
 		#deep_file_instrument('test.c')
 		#deep_function_instrument('test.c','display_tree')
-		shallow_file_instrument('test.c')
+		#shallow_file_instrument('test.c')
 		#shallow_function_instrument('test.c','main')
+		find_function_for_message('test.c',message='Address OF')
