@@ -209,8 +209,8 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 		element += 1
 		current_item =	sorted_function_list[element]	
 	startLine, endLine = find_function_body(fileName,current_item[1])
-	print 'MIHIR-DEBUG:: does it come here?'
-	if chomp(startLine) == '' or chomp(endLine) == '':
+
+	while chomp(startLine) == '' or chomp(endLine) == '':
 		print 'came in endline is empty block'
 		if len(sorted_function_list) > (element+1):
 			#Add entry in a file showing this file has issue		
@@ -252,8 +252,7 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 						current_item =	sorted_function_list[element]	
 						#print 'INSTRU-DEBUG:: functionName = ', current_item[1]
 						startLine, endLine = find_function_body(fileName,current_item[1])
-						if chomp(startLine) == '' or chomp(endLine) == '':
-							print 'does it come here??'
+						while chomp(startLine) == '' or chomp(endLine) == '' or not isinstance(endLine, (int, long)):
 							if len(sorted_function_list) > (element+1):
 								#Add entry in a file showing this file has issue		
 								element += 1
@@ -262,6 +261,9 @@ def shallow_file_instrument(fileName="Do_Not_Know",startLine=0, endLine='EOF'):
 							else:
 								#Add entry in a file showing this file has issue		
 								return
+						#if chomp(startLine) == '' or chomp(endLine) == '' or not isinstance(endLine, (int, long)):
+						#	continue;
+						#else:
 						enter_instrument = int(startLine) + 1
 						exit_instrument = int(endLine) 
 

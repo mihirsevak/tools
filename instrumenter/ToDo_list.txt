@@ -1,2 +1,5 @@
-1. Symlink has to be working irrespective of which location the debugger has been invoked.
-2. In tree mode all_files list has to be created properly. Listing only .c files2. In tree mode all_files list has to be created properly. Listing only .c files
+1) fix code for tree mode. 
+    ---> add exceptions to note down file names and function names
+    ---> add proper json file handing 
+2) start debugger work
+
