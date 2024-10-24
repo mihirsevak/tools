@@ -1,0 +1,12 @@
+    ==================================================================================
+    USAGE:
+
+    Lets say you have proj1, proj2, proj3 and proj4 in your current directory and you
+    want to seach all but proj3 for a file called fileoutput.c then you use
+
+    exfind . -v proj3 -name 'fileoutput.c'
+
+    If the same situation is there in your workplace folder then also it works.
+
+    exfind workspace -v proj3 -iname 'fileoutput.c'
+    ===================================================================================
