@@ -1,0 +1,33 @@
+#!/bin/bash
+
+
+DIRECTORY=""
+if [[ "$2" = "-v" ]]; then
+	#echo "exclusion found"
+	DIRECTORY=$3
+fi
+
+if [[ ${DIRECTORY} != "" ]]; then
+	SEARCHPATH=$(ls -1d $1/* | grep -v ${DIRECTORY} | tr '\n\r' ' ' | sed 's/ $/\n/')	
+	#echo $SEARCHPATH
+	shift 3
+	DEFAULT="$@"
+	#echo $DEFAULT
+else 
+	SEARCHPATH=$2
+	find $@
+	exit 0
+fi
+
+#echo "EXCLUDE DIRECTORY  = ${DIRECTORY}"
+#echo "SEARCH PATH     = ${SEARCHPATH}"
+#echo "DEFAULT         = ${DEFAULT}"
+
+#if [[ -n $1 ]]; then
+#    echo "Last line of file specified as non-opt/last argument:"
+#    tail -1 "$1"
+#fi
+
+
+find $SEARCHPATH $DEFAULT
+#find "$@"
