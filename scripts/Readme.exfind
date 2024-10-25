@@ -9,4 +9,9 @@
     If the same situation is there in your workplace folder then also it works.
 
     exfind workspace -v proj3 -iname 'fileoutput.c'
+
+	In case you have multiple directories you want to exclude from search use a list
+	of directories in double quotes as shown below.
+
+	exfind .  -v " music instrumenter scripts" -iname *.cpp
     ===================================================================================
