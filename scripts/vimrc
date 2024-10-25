@@ -1,0 +1,10 @@
+
+au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+
+set nu
+set ts=4
+set st=4
+set sw=4
+
+set laststatus=2
+"set statusline="%f%m%r%h%w [%Y] [0x%02.2B]%< %F%=%4v,%4l %3p%% of %L"
