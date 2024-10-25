@@ -24,7 +24,16 @@ if [[ "$2" = "-v" ]]; then
 fi
 
 if [[ ${DIRECTORY} != "" ]]; then
-	SEARCHPATH=$(ls -1d $1/* | grep -v ${DIRECTORY} | tr '\n\r' ' ' | sed 's/ $/\n/')	
+	WORDS=$(echo $DIRECTORY | wc -w )
+	if [[ $WORDS -gt 1 ]]; then
+		DIRECTORY=$(echo $DIRECTORY | xargs)
+		DIRLIST=$(echo ${DIRECTORY// / -e })	
+	else
+		DIRLIST=$DIRECTORY
+	fi
+
+	#echo $DIRLIST 
+	SEARCHPATH=$(ls -1d $1/*/ 2> /dev/null | grep -v -e ${DIRLIST} | tr '\n\r' ' ' | sed 's/ $/\n/' )	
 	#echo $SEARCHPATH
 	shift 3
 	DEFAULT="$@"
@@ -45,5 +54,6 @@ fi
 #fi
 
 
+#echo "FIND COMMAND: find $SEARCHPATH $DEFAULT"
 find $SEARCHPATH $DEFAULT
 #find "$@"
