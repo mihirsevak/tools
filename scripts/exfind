@@ -1,5 +1,5 @@
 #!/bin/bash
-# ======================================================================================
+# ==========================================================================================
 # USAGE:
 #
 #    Lets say you have proj1, proj2, proj3 and proj4 in your current directory and you
@@ -11,31 +11,38 @@
 #
 #    exfind workspace -v proj3 -iname 'fileoutput.c'
 #
-#######################################################################################
+###########################################################################################
+#    In case you want to search multiple directories you have to put them in doublequoted
+#    list as shown below.
+#	
+#	 exfind "workspace myproject1 myproject2 cprojects" -iname *.cpp
+#
+###########################################################################################
 #    In case you have multiple directories you want to exclude from search use a list
 #    of directories in double quotes as shown below.
 #
 #    exfind .  -v " music instrumenter scripts" -iname *.cpp
-#=======================================================================================
+#===========================================================================================
 
-
-DIRECTORY=""
+SEARCH_DIRECTORY="$1"
+SEARCH_DIRECTORY=$(echo $SEARCH_DIRECTORY | xargs)
+EXCLUSION_DIRECTORY=""
 if [[ "$2" = "-v" ]]; then
 	#echo "exclusion found"
-	DIRECTORY=$3
+	EXCLUSION_DIRECTORY=$3
+	EXCLUSION_DIRECTORY=$(echo $EXCLUSION_DIRECTORY | xargs)
 fi
 
-if [[ ${DIRECTORY} != "" ]]; then
-	WORDS=$(echo $DIRECTORY | wc -w )
+if [[ ${EXCLUSION_DIRECTORY} != "" ]]; then
+	WORDS=$(echo $EXCLUSION_DIRECTORY | wc -w )
 	if [[ $WORDS -gt 1 ]]; then
-		DIRECTORY=$(echo $DIRECTORY | xargs)
-		DIRLIST=$(echo ${DIRECTORY// / -e })	
+		EXCLUSION_DIRLIST=$(echo ${EXCLUSION_DIRECTORY// / -e })	
 	else
-		DIRLIST=$DIRECTORY
+		EXCLUSION_DIRLIST=$EXCLUSION_DIRECTORY
 	fi
 
-	#echo $DIRLIST 
-	SEARCHPATH=$(ls -1d $1/*/ 2> /dev/null | grep -v -e ${DIRLIST} | tr '\n\r' ' ' | sed 's/ $/\n/' )	
+	#echo $EXCLUSION_DIRLIST 
+	SEARCHPATH=$(ls -1d ${SEARCH_DIRECTORY}/*/ 2> /dev/null | grep -v -e ${EXCLUSION_DIRLIST} | tr '\n\r' ' ' | sed 's/ $/\n/' )	
 	#echo $SEARCHPATH
 	shift 3
 	DEFAULT="$@"
@@ -46,7 +53,7 @@ else
 	exit 0
 fi
 
-#echo "EXCLUDE DIRECTORY  = ${DIRECTORY}"
+#echo "EXCLUDE EXCLUSION_DIRECTORY  = ${EXCLUSION_DIRECTORY}"
 #echo "SEARCH PATH     = ${SEARCHPATH}"
 #echo "DEFAULT         = ${DEFAULT}"
 
