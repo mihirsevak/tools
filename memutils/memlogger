@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat /proc/157/smaps | grep -i pss |  awk '{Total+=$2} END {print Total/1024/1024" GB"}'
