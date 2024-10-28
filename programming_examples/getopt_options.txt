@@ -1,0 +1,23 @@
+The optstring contains option characters describing expected flag inputs. For example in:
+
+getopt(argc, argv, "ab:c::");   
+a: Flag -a expected
+b: -b flag with required argument
+c::: -c with optional argument
+Rules for composing optstrings:
+
+Alphabetic characters denote option names
+Appending : means an argument is expected
+:: means argument optional
+Multiple options can be concatenated
+Here are more examples:
+
+-------------------------------------------------------
+Optstring|	Meaning                                   |
+-------------------------------------------------------
+"x"      |  Flag -x expected                          |
+"x:"	   |  -x requires argument                      |
+"x::"	   |  -x argument optional                      |
+"abc:"	 |  Flags -a, -b, -c with required argument   |
+-------------------------------------------------------
+With the formalities covered, let‘s move on to practical usage!
