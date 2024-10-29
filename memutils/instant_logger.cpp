@@ -59,6 +59,18 @@ string log_memory(int pidVal)
 
 	return "ERROR";
 }
+
+void print_help()
+{
+	cout << "This program can take process name to dump its memory" << endl;
+	cout << "consumption or processID to dump its consumption." << endl;
+	cout << "USAGE: memlogger -p <pid> " << endl;
+	cout << "    or memlogger <processname>  " << endl;
+
+	cout << "By default this program creates a logfile ProcessMemoryConsumption.log." << endl;
+	cout << "You can override it by passing a"
+}
+
 /* Questions:
 *
 * 1) What if there are multiple instances of the same process? Decided we will come back and question which pid are we monitoring?
@@ -77,10 +89,11 @@ int main(int argc, char **argv)
     bool isVerbose = false;
 	bool isBatch = false;
 	bool isPid = false;
+	bool isOutput = false;
 	string batchfile;
 	string process_name;
     string pid;  
-	ofstream LogFile("ProcessMemoryConsumption.log", std::ios_base::app);
+	string outputFileName;
 	time_t rawtime;
   	struct tm * timeinfo;
   	char buffer[80];
@@ -88,24 +101,30 @@ int main(int argc, char **argv)
 
     // Long option definitions         
     struct option long_options[] = {
+        {"help", no_argument, NULL, 'v'},
         {"verbose", no_argument, NULL, 'v'},
-        {"input", required_argument, NULL, 'i'},
+        {"output", required_argument, NULL, 'o'},
         {"pid", optional_argument, NULL, 'p'},
         {"batch", optional_argument, NULL, 'b'},
         {NULL, 0, NULL, 0}};
 
 
     // Long option parsing
-    while((opt = getopt_long(argc, argv, "vi:p:b:", 
+    while((opt = getopt_long(argc, argv, "hvop:b:", 
                     long_options, NULL)) != -1) {
 
         switch(opt) {
+			case 'h':
+				print_help();
+				break;
+
             case 'v':
                 isVerbose = true;
                 break;
 
-            case 'i':
-                //ifile = optarg;
+            case 'o':
+                outputFileName = optarg;
+				isOutput = true;
                 break;
 
             case 'b':
@@ -147,9 +166,15 @@ int main(int argc, char **argv)
 
 		//cout << "The PID of the process " << process_name << " is " << pidVal << endl;
 		//cout << "memory consumption:" << used_memory << endl;
-		LogFile << timestamp << " Process Name: " << process_name << " Memory Consumption: " << used_memory << endl;
+		ofstream LogFile("ProcessMemoryConsumption.log", std::ios_base::app);
+		if ( isOutput == true)
+			ofstream LogFile(outputFileName, std::ios_base::app);
+		if (isPid)
+			LogFile << timestamp << " Process ID : " << pidVal << " Memory Consumption: " << used_memory;
+		else
+			LogFile << timestamp << " Process Name: " << process_name << " Memory Consumption: " << used_memory;
     } else {
-		cout << "Process " << process_name << "is not running." << endl;
+		cout << "Process " << process_name << " is not running." << endl;
     }
 
 	return 0;
