@@ -41,7 +41,8 @@ string log_memory(int pidVal)
     FILE* fp;
     char memory_str[100];
 	
-	string cmd = "cat /proc/" + to_string(pidVal) + "/smaps | grep -i pss |  awk '{Total+=$2} END {print Total/1024/1024\" GB\"}'";
+	//string cmd = "cat /proc/" + to_string(pidVal) + "/smaps | grep -i pss |  awk '{Total+=$2} END {print Total/1024/1024\" GB\"}'";
+	string cmd = "cat /proc/self/smaps | grep -i pss |  awk '{Total+=$2} END {print Total/1024/1024\" GB\"}'";
 	//cout << "Command to run = " << cmd << endl;
 
     // Execute the command and read the output
@@ -68,7 +69,8 @@ void print_help()
 	cout << "    or memlogger <processname>  " << endl;
 
 	cout << "By default this program creates a logfile ProcessMemoryConsumption.log." << endl;
-	cout << "You can override it by passing a"
+	cout << "You can override it by passing an argument. -l" << endl;
+	exit(0);
 }
 
 /* Questions:
@@ -86,7 +88,7 @@ int main(int argc, char **argv)
 {
 	//const char* process_name = "python3"; // Change this to the desired process name
     int opt;
-    bool isVerbose = false;
+    bool isLogFile = false;
 	bool isBatch = false;
 	bool isPid = false;
 	bool isOutput = false;
@@ -97,20 +99,20 @@ int main(int argc, char **argv)
 	time_t rawtime;
   	struct tm * timeinfo;
   	char buffer[80];
+	ofstream LogFile;
 
 
     // Long option definitions         
     struct option long_options[] = {
-        {"help", no_argument, NULL, 'v'},
-        {"verbose", no_argument, NULL, 'v'},
-        {"output", required_argument, NULL, 'o'},
+        {"help", no_argument, NULL, 'h'},
+        {"self", no_argument, NULL, 's'},
+        {"logfile", required_argument, NULL, 'l'},
         {"pid", optional_argument, NULL, 'p'},
-        {"batch", optional_argument, NULL, 'b'},
         {NULL, 0, NULL, 0}};
 
 
     // Long option parsing
-    while((opt = getopt_long(argc, argv, "hvop:b:", 
+    while((opt = getopt_long(argc, argv, "hsl:p:", 
                     long_options, NULL)) != -1) {
 
         switch(opt) {
@@ -118,13 +120,13 @@ int main(int argc, char **argv)
 				print_help();
 				break;
 
-            case 'v':
-                isVerbose = true;
-                break;
+			case 's':
+				print_help();
+				break;
 
-            case 'o':
+            case 'l':
+                isLogFile = true;
                 outputFileName = optarg;
-				isOutput = true;
                 break;
 
             case 'b':
@@ -164,15 +166,20 @@ int main(int argc, char **argv)
   		string timestamp(buffer);
   		//std::cout << timestamp;
 
-		//cout << "The PID of the process " << process_name << " is " << pidVal << endl;
-		//cout << "memory consumption:" << used_memory << endl;
-		ofstream LogFile("ProcessMemoryConsumption.log", std::ios_base::app);
-		if ( isOutput == true)
-			ofstream LogFile(outputFileName, std::ios_base::app);
-		if (isPid)
-			LogFile << timestamp << " Process ID : " << pidVal << " Memory Consumption: " << used_memory;
+
+		if (isLogFile)
+			LogFile.open(outputFileName, std::ios_base::app);
 		else
+			LogFile.open("ProcessMemoryConsumption.log", std::ios_base::app);
+
+		if (isPid) {
+			LogFile << timestamp << " Process ID : " << pidVal << " Memory Consumption: " << used_memory;
+			cout << timestamp << " Process ID : " << pidVal << " Memory Consumption: " << used_memory;
+		} else {
 			LogFile << timestamp << " Process Name: " << process_name << " Memory Consumption: " << used_memory;
+			cout << timestamp << " Process Name: " << process_name << " Memory Consumption: " << used_memory;
+		}
+
     } else {
 		cout << "Process " << process_name << " is not running." << endl;
     }
